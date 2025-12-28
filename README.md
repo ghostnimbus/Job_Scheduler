@@ -5,7 +5,6 @@ A scalable, production-ready job scheduler system capable of executing thousands
 ## Table of Contents
 
 - [System Overview](#system-overview)
-- [Architecture](#architecture)
 - [Features](#features)
 - [API Design](#api-design)
 - [Data Flow](#data-flow)
@@ -26,122 +25,46 @@ The High-Throughput Job Scheduler is designed to:
 5. **Scale**: Handle thousands of job executions per second
 6. **Minimize Drift**: Execute jobs with minimal delay from scheduled time
 
-## Architecture
-
-### System Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Client Applications                      │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           │ HTTP REST API
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                    Express API Layer                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ Create Job   │  │ Get Executions│  │  Metrics     │     │
-│  │ Update Job   │  │  Observability│  │  Health      │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                   Service Layer                              │
-│  ┌──────────────────┐  ┌──────────────────┐                │
-│  │  JobScheduler    │  │  JobExecutor      │                │
-│  │  - Schedule mgmt │  │  - HTTP execution │                │
-│  │  - CRON parsing  │  │  - Retry logic    │                │
-│  │  - Drift control │  │  - At-least-once  │                │
-│  └──────────────────┘  └──────────────────┘                │
-│  ┌──────────────────┐                                       │
-│  │  AlertService    │                                       │
-│  │  - Failure alerts│                                       │
-│  └──────────────────┘                                       │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│                   Data Layer                                 │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              SQLite Database                          │  │
-│  │  - jobs table (job definitions)                      │  │
-│  │  - job_executions table (execution history)          │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│              External APIs (Job Targets)                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Component Details
-
-1. **API Layer** (`src/api/routes.js`)
-   - RESTful endpoints for job management
-   - Request validation and error handling
-   - Observability endpoints
-
-2. **Service Layer**
-   - **JobScheduler** (`src/services/jobScheduler.js`): Core scheduling logic
-     - CRON expression parsing with seconds support
-     - Job execution triggering
-     - Drift minimization
-   - **JobExecutor** (`src/services/jobExecutor.js`): Job execution engine
-     - HTTP POST request execution
-     - At-least-once semantics with retries
-     - Concurrent execution management
-   - **AlertService** (`src/services/alertService.js`): Failure notification
-
-3. **Data Layer** (`src/database/db.js`)
-   - SQLite database for persistence
-   - Job and execution tracking
-   - Optimized queries with indexes
-
-4. **Utilities**
-   - **CronParser** (`src/utils/cronParser.js`): Extended CRON parser with seconds
-   - **Logger** (`src/utils/logger.js`): Structured logging with Winston
 
 ## Features
 
 ### Functional Requirements
 
-✅ **Job Management**
+**Job Management**
 - Create jobs with CRON schedules (including seconds)
 - Update existing jobs
 - View all job execution instances
 - Alert on job failures
 
-✅ **High Throughput**
+**High Throughput**
 - Designed to handle thousands of executions per second
 - Asynchronous, non-blocking job execution
 - Configurable concurrency limits
 
-✅ **Reliability**
+**Reliability**
 - At-least-once execution semantics
 - Automatic retry on failure
 - Persistent execution history
 - Fault-tolerant design
 
-✅ **Accuracy**
+**Accuracy**
 - Second-level precision scheduling
 - Drift tracking and minimization
 - Real-time schedule matching
 
 ### Non-Functional Requirements
 
-✅ **Modularity**
+**Modularity**
 - Clear separation of concerns
 - Layered architecture (API, Service, Data)
 - Reusable components
 
-✅ **Observability**
+**Observability**
 - Comprehensive logging
 - Metrics collection (latency, success/failure rates, drift)
 - Debug endpoints
 
-✅ **Scalability**
+**Scalability**
 - Efficient job checking algorithm
 - Database indexing for performance
 - Configurable resource limits
@@ -429,51 +352,48 @@ The application will be available at `http://localhost:3000`
 ### 1. SQLite vs. PostgreSQL/MySQL
 **Decision**: SQLite for simplicity
 **Trade-off**: 
-- ✅ Simple deployment, no external dependencies
-- ✅ Sufficient for moderate scale
-- ❌ Limited concurrent writes, not ideal for extreme scale
+- Simple deployment, no external dependencies
+- Sufficient for moderate scale
+- Limited concurrent writes, not ideal for extreme scale
 **Alternative**: Use PostgreSQL for production at scale
 
 ### 2. Second-by-Second Checking
 **Decision**: Check every second for due jobs
 **Trade-off**:
-- ✅ Simple, accurate for most use cases
-- ✅ Minimal CPU overhead
-- ❌ May miss sub-second precision (acceptable for this use case)
+- Simple, accurate for most use cases
+- Minimal CPU overhead
+- May miss sub-second precision (acceptable for this use case)
 
 ### 3. In-Memory Scheduling
 **Decision**: Keep scheduled jobs in memory
 **Trade-off**:
-- ✅ Fast job matching
-- ✅ Low latency
-- ❌ Jobs lost on restart (mitigated by loading from DB on startup)
+- Fast job matching
+- Low latency
+- Jobs lost on restart (mitigated by loading from DB on startup)
 
 ### 4. Asynchronous Execution
 **Decision**: Execute jobs asynchronously without blocking scheduler
 **Trade-off**:
-- ✅ High throughput
-- ✅ Scheduler not blocked by slow jobs
-- ❌ Requires careful resource management (handled via config)
+- High throughput
+- Scheduler not blocked by slow jobs
+- Requires careful resource management (handled via config)
 
 ### 5. At-Least-Once Semantics
 **Decision**: Retry on failure, persist all attempts
 **Trade-off**:
-- ✅ Reliable execution
-- ✅ Complete audit trail
-- ❌ Potential duplicate executions (acceptable for HTTP POST idempotency)
+- Reliable execution
+- Complete audit trail
+- Potential duplicate executions (acceptable for HTTP POST idempotency)
 
 ### 6. Single-Process Architecture
 **Decision**: Single Node.js process
 **Trade-off**:
-- ✅ Simple deployment
-- ✅ No distributed coordination needed
-- ❌ Limited horizontal scaling (can be extended with message queue)
+- Simple deployment
+- No distributed coordination needed
+- Limited horizontal scaling (can be extended with message queue)
 
-## Sample Dataset
 
-See `sample-data.json` for example job specifications and test data.
-
-## High Availability (Optional Enhancement)
+## High Availability
 
 For high availability, consider:
 
@@ -505,8 +425,4 @@ Logs are written to:
 - Console (with colors)
 - `logs/combined.log` (all logs)
 - `logs/error.log` (errors only)
-
-## License
-
-MIT
 
