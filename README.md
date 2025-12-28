@@ -1,6 +1,12 @@
 # Dockerized and Deployed Link : 
 https://job-scheduler-frontend-exb6.onrender.com/
 
+## Architecture Diagram : 
+sys_arch.png ( uploaded above)
+
+## System Workflow : 
+job_execution.png ( uploaded above)
+
 # High-Throughput Job Scheduler
 
 A scalable, production-ready job scheduler system capable of executing thousands of scheduled HTTP POST requests per second with high accuracy and reliability.
