@@ -1,3 +1,6 @@
+# Dockerized and Deployed Link : 
+https://job-scheduler-frontend-exb6.onrender.com/
+
 # High-Throughput Job Scheduler
 
 A scalable, production-ready job scheduler system capable of executing thousands of scheduled HTTP POST requests per second with high accuracy and reliability.
@@ -283,11 +286,11 @@ The Web UI will be available at `http://localhost:3000`
 ### Web UI (Recommended)
 
 Open `http://localhost:3000` in your browser to access the beautiful web interface:
-- 📊 Real-time metrics dashboard
-- ➕ Create jobs with a simple form
-- 📋 View all jobs and their details
-- 📈 Monitor executions in real-time
-- 🔄 Auto-refreshes every 5 seconds
+- Real-time metrics dashboard
+- Create jobs with a simple form
+- View all jobs and their details
+- Monitor executions in real-time
+- Auto-refreshes every 5 seconds
 
 See [UI_GUIDE.md](UI_GUIDE.md) for detailed UI documentation.
 
